@@ -11,6 +11,12 @@
   <artifactId>baremaps-cli</artifactId>
   <name>baremaps-cli</name>
 
+  <properties>
+    <app.distribution.directory>${project.basedir}/target</app.distribution.directory>
+    <app.distribution.name>${project.parent.artifactId}</app.distribution.name>
+    <app.main.class>org.apache.baremaps.cli.Baremaps</app.main.class>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>info.picocli</groupId>
@@ -79,7 +85,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.3.0</version>
         <executions>
           <execution>
             <id>make-zip</id>
@@ -88,7 +93,9 @@
             </goals>
             <phase>package</phase>
             <configuration>
-              <finalName>baremaps</finalName>
+              <finalName>${app.distribution.name}-${project.version}</finalName>
+              <outputDirectory>${app.distribution.directory}</outputDirectory>
+              <attach>false</attach>
               <appendAssemblyId>false</appendAssemblyId>
               <descriptors>
                 <descriptor>src/assembly/assembly.xml</descriptor>
@@ -112,6 +119,63 @@
           <compilerArgs>
             <arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
           </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>${app.main.class}</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <configuration>
+          <mainClass>${app.main.class}</mainClass>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.jreleaser</groupId>
+        <artifactId>jreleaser-maven-plugin</artifactId>
+        <configuration>
+          <jreleaser>
+            <project>
+              <copyright>Baremaps</copyright>
+              <java>
+                <mainClass>${app.main.class}</mainClass>
+              </java>
+            </project>
+            <release>
+              <github>
+                <owner>baremaps</owner>
+                <overwrite>true</overwrite>
+              </github>
+            </release>
+            <distributions>
+              <app>
+                <artifacts>
+                  <artifact>
+                    <path>${app.distribution.directory}/${app.distribution.name}-${project.version}.zip</path>
+                  </artifact>
+                </artifacts>
+              </app>
+            </distributions>
+            <checksum>
+              <algorithms>
+                <algorithm>SHA_256</algorithm>
+                <algorithm>SHA_512</algorithm>
+              </algorithms>
+            </checksum>
+            <signing>
+              <active>ALWAYS</active>
+              <mode>MEMORY</mode>
+            </signing>
+          </jreleaser>
         </configuration>
       </plugin>
     </plugins>
